@@ -3,7 +3,6 @@ package com.adam.mon_budget.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -58,40 +58,38 @@ fun BottomNavBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(White)
-            .border(
-                width = 2.dp,
-                color = Black,
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-            )
     ) {
+        // Ligne séparatrice en haut
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.5.dp)
+                .background(Color(0xFFE0E0E0))
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+                .padding(horizontal = 4.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
 
-                val iconBg by animateColorAsState(
-                    targetValue = if (isSelected) GreenDark else Color(0xFFF0F0F0),
-                    animationSpec = tween(200), label = "iconBg"
-                )
-                val iconTint by animateColorAsState(
-                    targetValue = if (isSelected) White else Color(0xFF999999),
-                    animationSpec = tween(200), label = "iconTint"
+                val iconColor by animateColorAsState(
+                    targetValue = if (isSelected) GreenDark else Color(0xFFAAAAAA),
+                    animationSpec = tween(200), label = "icon"
                 )
                 val labelColor by animateColorAsState(
-                    targetValue = if (isSelected) GreenDark else Color(0xFF999999),
-                    animationSpec = tween(200), label = "labelColor"
+                    targetValue = if (isSelected) GreenDark else Color(0xFFAAAAAA),
+                    animationSpec = tween(200), label = "label"
                 )
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
@@ -103,21 +101,30 @@ fun BottomNavBar(navController: NavController) {
                                 }
                             }
                         }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    // Icône dans un carré arrondi coloré
+                    // Indicateur actif au-dessus de l'icône
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(iconBg),
+                            .width(24.dp)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(if (isSelected) GreenDark else Color.Transparent)
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    // Icône
+                    Box(
+                        modifier = Modifier
+                            .size(if (isSelected) 26.dp else 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            tint = iconTint,
-                            modifier = Modifier.size(22.dp)
+                            tint = iconColor,
+                            modifier = Modifier.size(if (isSelected) 26.dp else 22.dp)
                         )
                     }
 
