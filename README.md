@@ -5,20 +5,20 @@ Développée en **Kotlin** avec **Jetpack Compose**, architecture **MVVM** et ba
 
 ---
 
-## 📱 Fonctionnalités
+##  Fonctionnalités
 
 ### 🔐 Authentification
 - Création de compte avec nom, prénom, email, mot de passe et budget mensuel
 - Connexion sécurisée avec validation des identifiants
 - Session utilisateur persistante en mémoire
 
-### 📊 Tableau de bord
+###  Tableau de bord
 - Résumé du budget mensuel restant avec barre de progression
 - Nombre de dépenses du mois et objectifs en cours
 - Aperçu des dernières dépenses
 - Navigation fluide entre les écrans
 
-### 💸 Gestion des dépenses
+###  Gestion des dépenses
 - Ajout d'une dépense avec montant, catégorie, note et lieu
 - Localisation GPS automatique ou sélection manuelle sur carte interactive (OpenStreetMap)
 - Historique complet avec filtres par catégorie
@@ -26,20 +26,20 @@ Développée en **Kotlin** avec **Jetpack Compose**, architecture **MVVM** et ba
 - Suppression avec confirmation
 - Détail complet de chaque dépense
 
-### 🎯 Objectifs d'épargne
+###  Objectifs d'épargne
 - Création d'objectifs avec nom, icône, montant cible, montant épargné et date limite
 - Barre de progression pour chaque objectif
 - Badge "Atteint" automatique quand l'objectif est rempli
 - **Conseils personnalisés par IA (Grok)** basés sur les objectifs et le budget
 
-### 🗺️ Carte interactive (in-app)
+###  Carte interactive (in-app)
 - Sélection d'un lieu directement dans l'application (pas de redirection externe)
 - Carte OpenStreetMap via OSMDroid
 - Reverse geocoding pour obtenir l'adresse à partir des coordonnées
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 app/
@@ -83,7 +83,7 @@ app/
 
 ---
 
-## 🚀 Installation
+##  Installation
 
 ### Prérequis
 - Android Studio Hedgehog ou plus récent
@@ -121,15 +121,15 @@ GROK_API_KEY=...ta clé API Grok...
 
 ---
 
-## 📸 Aperçu des écrans
+##  Aperçu des écrans
 
 | Connexion | Tableau de bord | Dépenses | Objectifs |
 |:---------:|:---------------:|:--------:|:---------:|
-| 🔐 Login  | 📊 Dashboard   | 💸 History | 🎯 Goals |
+|  Login  |  Dashboard   |  History |  Goals |
 
 ---
 
-## 👨‍💻 Auteur
+##  Auteur
 
 **Adam Hassen**  
 Projet réalisé dans le cadre d'un cours de développement mobile.
