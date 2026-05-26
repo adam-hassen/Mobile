@@ -7,7 +7,7 @@ Développée en **Kotlin** avec **Jetpack Compose**, architecture **MVVM** et ba
 
 ##  Fonctionnalités
 
-### 🔐 Authentification
+###  Authentification
 - Création de compte avec nom, prénom, email, mot de passe et budget mensuel
 - Connexion sécurisée avec validation des identifiants
 - Session utilisateur persistante en mémoire
