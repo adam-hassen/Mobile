@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adam.mon_budget.ui.theme.Black
@@ -27,14 +28,15 @@ import com.adam.mon_budget.ui.theme.NunitoFontFamily
 import com.adam.mon_budget.ui.theme.White
 
 @Composable
-fun MonBudgetLogo() {
+fun MonBudgetLogo(size: Dp = 80.dp) {
+    val barHeightFactor = size.value / 80f
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(size)
                 .clip(RoundedCornerShape(16.dp))
                 .background(GreenDark),
             contentAlignment = Alignment.BottomCenter
@@ -49,22 +51,22 @@ fun MonBudgetLogo() {
                 Spacer(modifier = Modifier.width(4.dp))
                 Box(
                     modifier = Modifier
-                        .width(10.dp)
-                        .height(48.dp)
+                        .width((10 * barHeightFactor).dp)
+                        .height((48 * barHeightFactor).dp)
                         .background(White)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width((6 * barHeightFactor).dp))
                 Box(
                     modifier = Modifier
-                        .width(10.dp)
-                        .height(72.dp)
+                        .width((10 * barHeightFactor).dp)
+                        .height((72 * barHeightFactor).dp)
                         .background(White)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width((6 * barHeightFactor).dp))
                 Box(
                     modifier = Modifier
-                        .width(10.dp)
-                        .height(60.dp)
+                        .width((10 * barHeightFactor).dp)
+                        .height((60 * barHeightFactor).dp)
                         .background(White)
                 )
                 Spacer(modifier = Modifier.width(4.dp))

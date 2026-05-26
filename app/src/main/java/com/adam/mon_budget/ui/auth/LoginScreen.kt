@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,11 +39,35 @@ import com.adam.mon_budget.ui.theme.GreenDark
 import com.adam.mon_budget.ui.theme.GreenPrimary
 import com.adam.mon_budget.ui.theme.InterFontFamily
 import com.adam.mon_budget.ui.theme.NunitoFontFamily
+import com.adam.mon_budget.ui.theme.RedAlert
+import com.adam.mon_budget.viewmodel.AuthState
+import com.adam.mon_budget.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel
+) {
     var email by remember { mutableStateOf("") }
     var motDePasse by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> {
+                navController.navigate(Routes.DASHBOARD) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
+                }
+                authViewModel.resetState()
+            }
+            is AuthState.Error -> {
+                errorMessage = state.message
+            }
+            else -> {}
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -73,19 +101,40 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Message d'erreur
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage!!,
+                    fontFamily = InterFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = RedAlert,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { errorMessage = null }
+                )
+            }
+
             // Champ Email
             InputField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    errorMessage = null
+                },
                 placeholder = "Adresse e-mail",
                 keyboardType = KeyboardType.Email,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Champ Mot de passe
+            // Champ Mot de passe (avec œil)
             InputField(
                 value = motDePasse,
-                onValueChange = { motDePasse = it },
+                onValueChange = {
+                    motDePasse = it
+                    errorMessage = null
+                },
                 placeholder = "Mot de passe",
                 isPassword = true,
                 modifier = Modifier.fillMaxWidth()
@@ -106,15 +155,21 @@ fun LoginScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             // Bouton Connexion
-            PrimaryButton(
-                text = "Connexion",
-                onClick = {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (authState is AuthState.Loading) {
+                CircularProgressIndicator(
+                    color = GreenDark,
+                    modifier = Modifier.size(48.dp)
+                )
+            } else {
+                PrimaryButton(
+                    text = "Connexion",
+                    onClick = {
+                        errorMessage = null
+                        authViewModel.login(email, motDePasse)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -135,6 +190,7 @@ fun LoginScreen(navController: NavController) {
                 color = GreenDark,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.clickable {
+                    authViewModel.resetState()
                     navController.navigate(Routes.REGISTER)
                 }
             )

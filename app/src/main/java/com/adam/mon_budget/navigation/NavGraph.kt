@@ -1,6 +1,7 @@
 package com.adam.mon_budget.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,18 +19,22 @@ import com.adam.mon_budget.ui.profile.ChangePasswordScreen
 import com.adam.mon_budget.ui.profile.EditProfileScreen
 import com.adam.mon_budget.ui.profile.ProfileScreen
 import com.adam.mon_budget.ui.settings.SettingsScreen
+import com.adam.mon_budget.viewmodel.AuthViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController) {
+    // ViewModel partagé entre Login et Register
+    val authViewModel: AuthViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = Routes.LOGIN
     ) {
         composable(Routes.LOGIN) {
-            LoginScreen(navController = navController)
+            LoginScreen(navController = navController, authViewModel = authViewModel)
         }
         composable(Routes.REGISTER) {
-            RegisterScreen(navController = navController)
+            RegisterScreen(navController = navController, authViewModel = authViewModel)
         }
         composable(Routes.DASHBOARD) {
             DashboardScreen(navController = navController)
