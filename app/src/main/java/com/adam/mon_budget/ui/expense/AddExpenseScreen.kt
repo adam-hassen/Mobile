@@ -2,10 +2,7 @@ package com.adam.mon_budget.ui.expense
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.location.Geocoder
 import android.location.LocationManager
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -59,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.adam.mon_budget.data.model.Category
 import com.adam.mon_budget.data.model.Expense
+import com.adam.mon_budget.ui.components.LocationPickerDialog
 import com.adam.mon_budget.ui.components.PrimaryButton
 import com.adam.mon_budget.ui.components.getCategoryIcon
 import com.adam.mon_budget.ui.theme.Black
@@ -87,8 +85,20 @@ fun AddExpenseScreen(navController: NavController) {
     var errorMontant by remember { mutableStateOf<String?>(null) }
     var loadingLocation by remember { mutableStateOf(false) }
     var locationError by remember { mutableStateOf<String?>(null) }
+    var showMapPicker by remember { mutableStateOf(false) }
 
-    // Launcher permission localisation
+    // Popup carte in-app
+    if (showMapPicker) {
+        LocationPickerDialog(
+            onDismiss = { showMapPicker = false },
+            onLocationSelected = { address ->
+                lieu = address
+                locationError = null
+            }
+        )
+    }
+
+    // Permission GPS
     val locationPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -113,7 +123,6 @@ fun AddExpenseScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
     ) {
-
         /* ── HEADER ── */
         Box(
             modifier = Modifier
@@ -129,12 +138,9 @@ fun AddExpenseScreen(navController: NavController) {
                 Icon(Icons.Filled.ArrowBackIosNew, null, tint = White, modifier = Modifier.size(20.dp))
             }
             Text(
-                text = "Nouvelle dépense",
-                fontFamily = NunitoFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 20.sp,
-                color = White,
-                modifier = Modifier.align(Alignment.Center)
+                "Nouvelle dépense", fontFamily = NunitoFontFamily,
+                fontWeight = FontWeight.Normal, fontSize = 20.sp,
+                color = White, modifier = Modifier.align(Alignment.Center)
             )
         }
 
@@ -146,13 +152,8 @@ fun AddExpenseScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                "Quel montant ?",
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                color = GreenDark
-            )
+            Text("Quel montant ?", fontFamily = InterFontFamily,
+                fontWeight = FontWeight.Normal, fontSize = 14.sp, color = GreenDark)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,19 +202,11 @@ fun AddExpenseScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SectionLabel("Catégorie")
-            val categories = Category.entries
-            categories.chunked(3).forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+            Category.entries.chunked(3).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     row.forEach { cat ->
-                        CategoryChip(
-                            category = cat,
-                            isSelected = selectedCategory == cat,
-                            onClick = { selectedCategory = cat },
-                            modifier = Modifier.weight(1f)
-                        )
+                        CategoryChip(category = cat, isSelected = selectedCategory == cat,
+                            onClick = { selectedCategory = cat }, modifier = Modifier.weight(1f))
                     }
                     repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                 }
@@ -229,13 +222,9 @@ fun AddExpenseScreen(navController: NavController) {
         ) {
             SectionLabel("Note (optionnel)")
             OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                placeholder = {
-                    Text("Ex : déjeuner avec des amis…", fontFamily = InterFontFamily, fontSize = 14.sp, color = Color.Gray)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2, maxLines = 3,
+                value = note, onValueChange = { note = it },
+                placeholder = { Text("Ex : déjeuner avec des amis…", fontFamily = InterFontFamily, fontSize = 14.sp, color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 3,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = White, unfocusedContainerColor = White,
@@ -247,25 +236,17 @@ fun AddExpenseScreen(navController: NavController) {
 
         Spacer(Modifier.height(16.dp))
 
-        /* ── LIEU AVEC GPS + MAP ── */
+        /* ── LIEU : texte + GPS + carte in-app ── */
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SectionLabel("Lieu (optionnel)")
-
-            // Champ texte lieu
             OutlinedTextField(
-                value = lieu,
-                onValueChange = { lieu = it; locationError = null },
-                placeholder = {
-                    Text("Ex : Carrefour, Paris…", fontFamily = InterFontFamily, fontSize = 14.sp, color = Color.Gray)
-                },
-                leadingIcon = {
-                    Icon(Icons.Filled.LocationOn, null, tint = GreenDark, modifier = Modifier.size(20.dp))
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                value = lieu, onValueChange = { lieu = it; locationError = null },
+                placeholder = { Text("Ex : Carrefour, Paris…", fontFamily = InterFontFamily, fontSize = 14.sp, color = Color.Gray) },
+                leadingIcon = { Icon(Icons.Filled.LocationOn, null, tint = GreenDark, modifier = Modifier.size(20.dp)) },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = White, unfocusedContainerColor = White,
@@ -273,75 +254,44 @@ fun AddExpenseScreen(navController: NavController) {
                     focusedTextColor = Black, unfocusedTextColor = Black,
                 )
             )
-
-            // Boutons GPS + Ouvrir Map
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Bouton Ma position
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // GPS
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(14.dp))
                         .background(White)
                         .border(2.dp, Black, RoundedCornerShape(14.dp))
-                        .clickable {
-                            locationPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                        }
+                        .clickable { locationPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) }
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (loadingLocation) {
-                        CircularProgressIndicator(color = GreenDark, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(color = GreenDark, modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
                     } else {
-                        Icon(Icons.Filled.MyLocation, null, tint = GreenDark, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Filled.MyLocation, null, tint = GreenDark, modifier = Modifier.size(14.dp))
                     }
-                    Text(
-                        text = if (loadingLocation) "Localisation…" else "Ma position",
-                        fontFamily = InterFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = Black
-                    )
+                    Text(if (loadingLocation) "Localisation…" else "Ma position",
+                        fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = Black)
                 }
-
-                // Bouton Ouvrir Maps
+                // Carte in-app
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(14.dp))
                         .background(GreenDark)
                         .border(2.dp, GreenDark, RoundedCornerShape(14.dp))
-                        .clickable {
-                            val query = if (lieu.isNotBlank()) Uri.encode(lieu) else "map"
-                            val uri = Uri.parse("geo:0,0?q=$query")
-                            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                                setPackage("com.google.android.apps.maps")
-                            }
-                            // Fallback si Maps pas installé
-                            val fallback = Intent(Intent.ACTION_VIEW,
-                                Uri.parse("https://maps.google.com/?q=$query"))
-                            try { context.startActivity(intent) }
-                            catch (e: Exception) { context.startActivity(fallback) }
-                        }
+                        .clickable { showMapPicker = true }
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(Icons.Filled.Map, null, tint = White, modifier = Modifier.size(16.dp))
-                    Text(
-                        text = "Ouvrir Maps",
-                        fontFamily = InterFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = White
-                    )
+                    Icon(Icons.Filled.Map, null, tint = White, modifier = Modifier.size(14.dp))
+                    Text("Choisir sur carte", fontFamily = InterFontFamily,
+                        fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = White)
                 }
             }
-
-            // Message d'erreur localisation
             if (locationError != null) {
                 Text(locationError!!, fontFamily = InterFontFamily, fontSize = 12.sp, color = RedAlert)
             }
@@ -349,16 +299,13 @@ fun AddExpenseScreen(navController: NavController) {
 
         Spacer(Modifier.height(32.dp))
 
-        /* ── BOUTON ENREGISTRER ── */
+        /* ── ENREGISTRER ── */
         Box(modifier = Modifier.padding(horizontal = 24.dp)) {
             PrimaryButton(
                 text = "Enregistrer la dépense",
                 onClick = {
                     val d = montant.toDoubleOrNull()
-                    if (d == null || d <= 0.0) {
-                        errorMontant = "Veuillez saisir un montant valide"
-                        return@PrimaryButton
-                    }
+                    if (d == null || d <= 0.0) { errorMontant = "Veuillez saisir un montant valide"; return@PrimaryButton }
                     vm.addExpense(Expense(montant = d, categorie = selectedCategory.name,
                         note = note.trim(), lieu = lieu.trim(), date = System.currentTimeMillis()))
                     navController.popBackStack()
@@ -366,12 +313,10 @@ fun AddExpenseScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
-
         Spacer(Modifier.height(40.dp))
     }
 }
 
-/* ── GPS helper (Coroutine, thread IO) ── */
 private suspend fun getCurrentAddress(context: Context): String? = withContext(Dispatchers.IO) {
     try {
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -385,26 +330,17 @@ private suspend fun getCurrentAddress(context: Context): String? = withContext(D
             }
         }
         if (!found) return@withContext null
-        val geocoder = Geocoder(context, Locale.getDefault())
         @Suppress("DEPRECATION")
-        val addresses = geocoder.getFromLocation(lat, lon, 1)
-        if (!addresses.isNullOrEmpty()) {
-            val a = addresses[0]
+        val results = android.location.Geocoder(context, Locale.getDefault()).getFromLocation(lat, lon, 1)
+        if (!results.isNullOrEmpty()) {
+            val a = results[0]
             buildString {
-                if (!a.featureName.isNullOrBlank() && !a.featureName.first().isDigit())
-                    append(a.featureName)
-                else if (!a.thoroughfare.isNullOrBlank())
-                    append(a.thoroughfare)
-                if (!a.locality.isNullOrBlank()) {
-                    if (isNotEmpty()) append(", ")
-                    append(a.locality)
-                }
+                if (!a.thoroughfare.isNullOrBlank()) append(a.thoroughfare)
+                if (!a.locality.isNullOrBlank()) { if (isNotEmpty()) append(", "); append(a.locality) }
             }.ifBlank { null }
         } else null
     } catch (e: Exception) { null }
 }
-
-/* ── Sous-composants ── */
 
 @Composable
 private fun SectionLabel(text: String) {
@@ -413,14 +349,11 @@ private fun SectionLabel(text: String) {
 
 @Composable
 private fun CategoryChip(category: Category, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val bg  = if (isSelected) GreenDark else White
-    val bd  = if (isSelected) GreenDark else Black
-    val txt = if (isSelected) White else Black
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(bg)
-            .border(2.dp, bd, RoundedCornerShape(14.dp))
+            .background(if (isSelected) GreenDark else White)
+            .border(2.dp, if (isSelected) GreenDark else Black, RoundedCornerShape(14.dp))
             .clickable { onClick() }
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -435,6 +368,6 @@ private fun CategoryChip(category: Category, isSelected: Boolean, onClick: () ->
                 tint = if (isSelected) White else GreenDark, modifier = Modifier.size(20.dp))
         }
         Text(category.libelle, fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp, color = txt, textAlign = TextAlign.Center)
+            fontSize = 11.sp, color = if (isSelected) White else Black, textAlign = TextAlign.Center)
     }
 }

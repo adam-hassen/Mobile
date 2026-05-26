@@ -19,9 +19,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,6 +60,7 @@ import com.adam.mon_budget.ui.theme.InterFontFamily
 import com.adam.mon_budget.ui.theme.NunitoFontFamily
 import com.adam.mon_budget.ui.theme.RedAlert
 import com.adam.mon_budget.ui.theme.White
+import com.adam.mon_budget.viewmodel.AiState
 import com.adam.mon_budget.viewmodel.GoalViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,6 +70,7 @@ import java.util.Locale
 fun GoalsScreen(navController: NavController) {
     val vm: GoalViewModel = viewModel()
     val goals by vm.allGoals.collectAsState()
+    val aiState by vm.aiState.collectAsState()
     var goalToDelete by remember { mutableStateOf<Goal?>(null) }
 
     if (goalToDelete != null) {
@@ -82,8 +88,7 @@ fun GoalsScreen(navController: NavController) {
                     Text("Annuler", color = GreenDark, fontFamily = InterFontFamily)
                 }
             },
-            containerColor = White,
-            shape = RoundedCornerShape(20.dp)
+            containerColor = White, shape = RoundedCornerShape(20.dp)
         )
     }
 
@@ -96,10 +101,8 @@ fun GoalsScreen(navController: NavController) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Routes.ADD_GOAL) },
-                containerColor = GreenDark,
-                contentColor = White,
-                shape = CircleShape,
-                modifier = Modifier.size(58.dp)
+                containerColor = GreenDark, contentColor = White,
+                shape = CircleShape, modifier = Modifier.size(58.dp)
             ) {
                 Icon(Icons.Filled.Add, "Nouvel objectif", modifier = Modifier.size(28.dp))
             }
@@ -107,8 +110,7 @@ fun GoalsScreen(navController: NavController) {
     ) { pad ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().background(GreenPrimary),
-            contentPadding = pad,
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            contentPadding = pad
         ) {
 
             /* ── HEADER ── */
@@ -139,7 +141,104 @@ fun GoalsScreen(navController: NavController) {
                 }
             }
 
-            /* ── LISTE ou VIDE ── */
+            /* ── SECTION IA ── */
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Bouton Conseils IA
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(GreenDark)
+                            .border(2.dp, Black, RoundedCornerShape(16.dp))
+                            .clickable(enabled = aiState !is AiState.Loading) {
+                                vm.getAiAdvice(goals)
+                            }
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        if (aiState is AiState.Loading) {
+                            CircularProgressIndicator(color = White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Filled.AutoAwesome, null, tint = White, modifier = Modifier.size(20.dp))
+                        }
+                        Text(
+                            text = if (aiState is AiState.Loading) "Analyse en cours…" else "✨ Conseils IA pour mes objectifs",
+                            fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp, color = White
+                        )
+                    }
+
+                    // Résultat IA
+                    when (val state = aiState) {
+                        is AiState.Success -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(White)
+                                    .border(2.dp, Black, RoundedCornerShape(16.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.size(32.dp).clip(CircleShape).background(GreenPrimary),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("🤖", fontSize = 16.sp)
+                                            }
+                                            Text("Conseils personnalisés", fontFamily = InterFontFamily,
+                                                fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = GreenDark)
+                                        }
+                                        IconButton(onClick = { vm.resetAi() }, modifier = Modifier.size(28.dp)) {
+                                            Icon(Icons.Filled.Close, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                    Text(
+                                        text = state.advice,
+                                        fontFamily = InterFontFamily, fontWeight = FontWeight.Normal,
+                                        fontSize = 13.sp, color = Black,
+                                        lineHeight = 20.sp
+                                    )
+                                }
+                            }
+                        }
+                        is AiState.Error -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(RedAlert.copy(alpha = 0.08f))
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(state.message, fontFamily = InterFontFamily, fontSize = 13.sp,
+                                    color = RedAlert, modifier = Modifier.weight(1f))
+                                IconButton(onClick = { vm.resetAi() }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Filled.Close, null, tint = RedAlert, modifier = Modifier.size(14.dp))
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            /* ── LISTE OBJECTIFS ── */
             if (goals.isEmpty()) {
                 item { GoalsEmpty() }
             } else {
@@ -160,11 +259,8 @@ fun GoalsScreen(navController: NavController) {
 @Composable
 private fun GoalStatCard(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = Black) {
     Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(White)
-            .border(2.dp, Black, RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = modifier.clip(RoundedCornerShape(16.dp)).background(White)
+            .border(2.dp, Black, RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(label, fontFamily = InterFontFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, color = Color(0xFF888888))
@@ -181,37 +277,26 @@ private fun GoalCard(goal: Goal, onDelete: () -> Unit) {
     val restant = (goal.montantCible - goal.montantActuel).coerceAtLeast(0.0)
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(White)
-            .border(2.dp, Black, RoundedCornerShape(20.dp))
-            .padding(18.dp),
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp)).background(White)
+            .border(2.dp, Black, RoundedCornerShape(20.dp)).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Titre + icône + supprimer
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(GreenPrimary),
-                contentAlignment = Alignment.Center
-            ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(GreenPrimary),
+                contentAlignment = Alignment.Center) {
                 Icon(getGoalIcon(goal.iconeType), null, tint = GreenDark, modifier = Modifier.size(26.dp))
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(goal.nom, fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp, color = Black)
+                    fontSize = 15.sp, color = Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("Échéance : $dateStr", fontFamily = InterFontFamily, fontWeight = FontWeight.Normal,
                     fontSize = 12.sp, color = Color(0xFF888888))
             }
             if (atteint) {
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                        .background(GreenDark).padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
+                Box(modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(GreenDark)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)) {
                     Text("✓ Atteint", fontFamily = InterFontFamily, fontWeight = FontWeight.SemiBold,
                         fontSize = 11.sp, color = White)
                 }
@@ -220,8 +305,6 @@ private fun GoalCard(goal: Goal, onDelete: () -> Unit) {
                 Icon(Icons.Filled.Delete, null, tint = Color(0xFFCCCCCC), modifier = Modifier.size(18.dp))
             }
         }
-
-        // Montants
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
                 Text("Épargné", fontFamily = InterFontFamily, fontSize = 11.sp, color = Color(0xFF888888))
@@ -234,15 +317,10 @@ private fun GoalCard(goal: Goal, onDelete: () -> Unit) {
                     fontFamily = NunitoFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Black)
             }
         }
-
-        // Barre de progression
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            LinearProgressIndicator(
-                progress = { progress },
+            LinearProgressIndicator(progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(5.dp)),
-                color = if (atteint) GreenDark else GreenDark,
-                trackColor = GreyLight
-            )
+                color = GreenDark, trackColor = GreyLight)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("${(progress * 100).toInt()}% complété",
                     fontFamily = InterFontFamily, fontSize = 11.sp, color = Color(0xFF888888))
@@ -262,10 +340,8 @@ private fun GoalsEmpty() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Box(
-            modifier = Modifier.size(68.dp).clip(CircleShape).background(GreenPrimary),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.size(68.dp).clip(CircleShape).background(GreenPrimary),
+            contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.EmojiEvents, null, tint = GreenDark, modifier = Modifier.size(34.dp))
         }
         Text("Aucun objectif", fontFamily = NunitoFontFamily, fontWeight = FontWeight.SemiBold,
